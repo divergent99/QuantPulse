@@ -21,7 +21,21 @@ SECTOR_MAP = {
 
 
 def fetch_price_data(tickers: List[str], period: str = "1y") -> pd.DataFrame:
-    data = yf.download(tickers, period=period, auto_adjust=True, progress=False)
+    # Set headers to bypass Yahoo Finance datacenter IP blocks
+    import yfinance as yf
+    yf.utils.get_json = lambda url, proxy=None, timeout=None: {}
+    session = None
+    try:
+        import requests as req_lib
+        session = req_lib.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+        })
+    except Exception:
+        pass
+    data = yf.download(tickers, period=period, auto_adjust=True, progress=False, session=session)
     if isinstance(data.columns, pd.MultiIndex):
         prices = data["Close"]
     else:
