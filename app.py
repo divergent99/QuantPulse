@@ -233,7 +233,7 @@ def fmt(v,d=2):
 def period_selector():
     return dcc.RadioItems(
         id="period-store",
-        options=[{"label":l,"value":v} for l,v in [("6M","6mo"),("1Y","1y"),("2Y","2y"),("5Y","5y")]],
+        options=[{"label":l,"value":v} for l,v in [("6M","6mo"),("1Y","1y")]],
         value="1y",
         inline=True,
         inputStyle={"display":"none"},

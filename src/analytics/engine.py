@@ -33,7 +33,7 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
     # Source 1: Alpha Vantage (works from cloud IPs)
     av_key = os.getenv("ALPHA_VANTAGE_KEY", "demo")
     try:
-        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=full&apikey={av_key}"
+        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=compact&apikey={av_key}"
         resp = requests.get(url, timeout=15)
         data = resp.json()
         print(f"[AV DEBUG] {ticker} response keys: {list(data.keys())}", flush=True)
