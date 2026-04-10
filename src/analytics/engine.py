@@ -33,7 +33,7 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
     # Source 1: Alpha Vantage (works from cloud IPs)
     av_key = os.getenv("ALPHA_VANTAGE_KEY", "demo")
     try:
-        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={ticker}&outputsize=full&apikey={av_key}"
+        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=full&apikey={av_key}"
         resp = requests.get(url, timeout=15)
         data = resp.json()
         if "Time Series (Daily)" in data:
@@ -42,7 +42,7 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
             for date_str, vals in ts.items():
                 date = pd.to_datetime(date_str)
                 if start <= date <= end:
-                    prices[date] = float(vals["5. adjusted close"])
+                    prices[date] = float(vals["4. close"])
             if len(prices) > 10:
                 s = pd.Series(prices).sort_index()
                 s.name = ticker
