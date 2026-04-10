@@ -197,10 +197,13 @@ html,body{height:100%;background:#0d1117;color:#e6edf3;font-family:"Space Grotes
 <footer>{%config%}{%scripts%}{%renderer%}
 <script>
 setInterval(function(){
-    var labels = document.querySelectorAll("#period-store label");
-    labels.forEach(function(lbl){
-        var inp = lbl.previousElementSibling;
-        if(inp && inp.checked){
+    var wrap = document.getElementById("period-store");
+    if (!wrap) return;
+    var inputs = wrap.querySelectorAll("input[type=radio]");
+    inputs.forEach(function(inp){
+        var lbl = inp.nextElementSibling;
+        if (!lbl) return;
+        if(inp.checked){
             lbl.style.borderColor="rgba(0,212,255,0.5)";
             lbl.style.color="#00d4ff";
             lbl.style.background="rgba(0,212,255,0.07)";
