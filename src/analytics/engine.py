@@ -36,6 +36,11 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
         url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=full&apikey={av_key}"
         resp = requests.get(url, timeout=15)
         data = resp.json()
+        print(f"[AV DEBUG] {ticker} response keys: {list(data.keys())}", flush=True)
+        if "Note" in data:
+            print(f"[AV DEBUG] Rate limit hit: {data['Note']}", flush=True)
+        if "Information" in data:
+            print(f"[AV DEBUG] Info: {data['Information']}", flush=True)
         if "Time Series (Daily)" in data:
             ts = data["Time Series (Daily)"]
             prices = {}
