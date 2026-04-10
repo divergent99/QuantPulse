@@ -9,6 +9,7 @@
 [![AlgoFest Hackathon 2026](https://img.shields.io/badge/AlgoFest%20Hackathon%202026-Devpost-003E54?style=flat-square&logo=devpost&logoColor=white)](https://devpost.com)
 [![Amazon Nova Lite](https://img.shields.io/badge/Amazon-Nova%20Lite-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock)
 [![Tavily](https://img.shields.io/badge/Tavily-Live%20Search-4A90E2?style=flat-square)](https://tavily.com)
+[![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-Market%20Data-1B6CA8?style=flat-square)](https://alphavantage.co)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Plotly Dash](https://img.shields.io/badge/Plotly%20Dash-3.0-3D4CB7?style=flat-square&logo=plotly)](https://dash.plotly.com)
@@ -43,11 +44,25 @@ QuantPulse runs a full quantitative risk engine on your portfolio — Value at R
 | Agent | LangGraph (`StateGraph` + sequential nodes) |
 | LLM | Amazon Nova Lite via AWS Bedrock |
 | News | Tavily Search API |
-| Market Data | yfinance (real-time) |
+| Market Data | Alpha Vantage API + yfinance fallback |
 | Quant | NumPy · Pandas · SciPy |
 | Backend | FastAPI + Uvicorn |
 | Frontend | Plotly Dash + Dash Bootstrap Components |
 | Deployment | Railway |
+
+---
+
+## Rate Limits
+
+> **Important — read before running**
+
+| Service | Free Tier Limit | Notes |
+|---|---|---|
+| Alpha Vantage | 25 requests/day | Each analysis uses ~6–11 requests (1 per ticker + SPY for beta). Get your key at [alphavantage.co](https://alphavantage.co/support/#api-key) |
+| Tavily | 1,000 requests/month | Used for news fetch on each analysis |
+| Amazon Bedrock (Nova Lite) | Pay per token | Very cheap — ~$0.0006 per analysis |
+
+On the free Alpha Vantage tier, you can run approximately **2–3 full analyses per day**. For production use, upgrade to a paid Alpha Vantage plan ($50/month for unlimited calls).
 
 ---
 
@@ -56,10 +71,9 @@ QuantPulse runs a full quantitative risk engine on your portfolio — Value at R
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/divergent99/quantpulse
-cd quantpulse
+git clone https://github.com/divergent99/QuantPulse
+cd QuantPulse
 pip install -r requirements.txt
-pip install tavily-python
 ```
 
 ### 2. Environment variables
@@ -75,10 +89,11 @@ cp .env.example .env
 | `AWS_ACCESS_KEY_ID` | AWS access key with Bedrock permissions |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key |
 | `AWS_REGION` | AWS region (default: `us-east-1`) |
-| `TAVILY_API_KEY` | Tavily API key for live news search |
+| `TAVILY_API_KEY` | Tavily API key — [get one free](https://tavily.com) |
+| `ALPHA_VANTAGE_KEY` | Alpha Vantage API key — [get one free](https://alphavantage.co/support/#api-key) |
 | `API_URL` | FastAPI base URL (default: `http://localhost:8000`) |
 
-### 3. Run
+### 3. Run locally
 
 **Terminal 1 — API:**
 ```bash
@@ -117,10 +132,13 @@ quantpulse/
 │   └── agents/
 │       └── risk_agent.py         # LangGraph agent + Nova Lite calls
 ├── assets/
-│   └── warp.js                   # Three.js star field background
+│   ├── warp.js                   # Three.js star field background
+│   ├── banner.png                # Project banner
+│   └── demo.png                  # Demo screenshot
 ├── .env.example
 ├── requirements.txt
-└── railway.toml
+├── railway.toml
+└── Procfile
 ```
 
 ---
@@ -146,7 +164,7 @@ quantpulse/
 - Plain-English risk narrative
 - Sector concentration + correlation risk analysis
 - 4 specific actionable recommendations
-- Context-aware portfolio chat (ask anything, get number-specific answers)
+- Context-aware portfolio chat
 
 **Live Intelligence**
 - Tavily-powered news — portfolio-specific + macro, tagged and linked
@@ -158,20 +176,20 @@ quantpulse/
 ```
 FastAPI /analyze
        │
-yfinance ──► Price Data
+Alpha Vantage ──► Price Data (yfinance fallback for local)
        │
 Quant Engine (VaR · Sharpe · Beta · Drawdown · Correlation)
        │
 LangGraph Agent
-  [risk_scorer]          ← algorithmic, no LLM
+  [risk_scorer]               ← algorithmic, no LLM
        ↓
-  [risk_narrative]       → Amazon Nova Lite
+  [risk_narrative]            → Amazon Nova Lite
        ↓
-  [sector_analysis]      → Amazon Nova Lite
+  [sector_analysis]           → Amazon Nova Lite
        ↓
-  [correlation_analysis] → Amazon Nova Lite
+  [correlation_analysis]      → Amazon Nova Lite
        ↓
-  [generate_recommendations] → Amazon Nova Lite
+  [generate_recommendations]  → Amazon Nova Lite
        │
 Tavily News Fetch (parallel)
        │
@@ -189,5 +207,5 @@ Prize pool: $5,000
 ---
 
 <div align="center">
-Made with Amazon Nova Lite · LangGraph · Tavily · Plotly Dash · yfinance
+Made with Amazon Nova Lite · LangGraph · Tavily · Alpha Vantage · Plotly Dash
 </div>
