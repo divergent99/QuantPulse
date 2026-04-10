@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
-import yfinance as yf
+import requests
 from scipy import stats
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import warnings
+import os
+from datetime import datetime, timedelta
 warnings.filterwarnings("ignore")
 
 SECTOR_MAP = {
@@ -19,33 +21,83 @@ SECTOR_MAP = {
     "T": "Communication Services", "VZ": "Communication Services",
 }
 
+PERIOD_DAYS = {"6mo": 180, "1y": 365, "2y": 730, "5y": 1825}
 
-def fetch_price_data(tickers: List[str], period: str = "1y") -> pd.DataFrame:
-    # Set headers to bypass Yahoo Finance datacenter IP blocks
-    import yfinance as yf
-    yf.utils.get_json = lambda url, proxy=None, timeout=None: {}
-    session = None
+
+def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
+    """Fetch price data using multiple fallback sources."""
+    days = PERIOD_DAYS.get(period, 365)
+    end = datetime.now()
+    start = end - timedelta(days=days)
+
+    # Source 1: Alpha Vantage (works from cloud IPs)
+    av_key = os.getenv("ALPHA_VANTAGE_KEY", "demo")
     try:
-        import requests as req_lib
-        session = req_lib.Session()
-        session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-        })
+        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={ticker}&outputsize=full&apikey={av_key}"
+        resp = requests.get(url, timeout=15)
+        data = resp.json()
+        if "Time Series (Daily)" in data:
+            ts = data["Time Series (Daily)"]
+            prices = {}
+            for date_str, vals in ts.items():
+                date = pd.to_datetime(date_str)
+                if start <= date <= end:
+                    prices[date] = float(vals["5. adjusted close"])
+            if len(prices) > 10:
+                s = pd.Series(prices).sort_index()
+                s.name = ticker
+                return s
     except Exception:
         pass
-    data = yf.download(tickers, period=period, auto_adjust=True, progress=False, session=session)
-    if isinstance(data.columns, pd.MultiIndex):
-        prices = data["Close"]
-    else:
-        prices = data[["Close"]] if "Close" in data.columns else data
-    # Drop columns that are entirely NaN (failed/invalid tickers)
-    prices = prices.dropna(axis=1, how="all")
-    prices = prices.dropna(how="all")
-    if prices.empty or len(prices) < 10:
-        raise ValueError("Could not fetch price data. Check your ticker symbols are valid (e.g. AAPL, MSFT).")
-    return prices
+
+    # Source 2: yfinance with curl_cffi impersonation
+    try:
+        from curl_cffi import requests as cffi_req
+        import yfinance as yf
+        session = cffi_req.Session(impersonate="chrome120")
+        t = yf.Ticker(ticker, session=session)
+        hist = t.history(period=period)
+        if len(hist) > 10:
+            s = hist["Close"]
+            s.name = ticker
+            return s
+    except Exception:
+        pass
+
+    # Source 3: yfinance plain
+    try:
+        import yfinance as yf
+        hist = yf.download(ticker, period=period, auto_adjust=True, progress=False)
+        if len(hist) > 10:
+            if isinstance(hist.columns, pd.MultiIndex):
+                s = hist["Close"][ticker]
+            else:
+                s = hist["Close"]
+            s.name = ticker
+            return s
+    except Exception:
+        pass
+
+    return pd.Series(name=ticker, dtype=float)
+
+
+def fetch_price_data(tickers: List[str], period: str = "1y") -> pd.DataFrame:
+    series = {}
+    for t in tickers:
+        s = fetch_single_ticker(t, period)
+        if len(s) > 10:
+            series[t] = s
+
+    if len(series) < 2:
+        raise ValueError(
+            f"Could not fetch data for enough tickers. "
+            f"Got data for: {list(series.keys()) or 'none'}. "
+            f"If deploying to cloud, add ALPHA_VANTAGE_KEY env variable."
+        )
+
+    df = pd.DataFrame(series)
+    df = df.dropna(how="all")
+    return df
 
 
 def compute_returns(prices: pd.DataFrame) -> pd.DataFrame:
@@ -54,8 +106,9 @@ def compute_returns(prices: pd.DataFrame) -> pd.DataFrame:
 
 def compute_portfolio_returns(returns: pd.DataFrame, weights: Dict[str, float]) -> pd.Series:
     tickers = list(weights.keys())
-    w = np.array([weights[t] for t in tickers])
-    r = returns[tickers].dropna()
+    available = [t for t in tickers if t in returns.columns]
+    w = np.array([weights[t] for t in available])
+    r = returns[available].dropna()
     return r.dot(w)
 
 
@@ -95,14 +148,12 @@ def compute_max_drawdown(portfolio_returns: pd.Series) -> float:
     return round(float(drawdown.min()) * 100, 2)
 
 
-def compute_correlation_matrix(returns: pd.DataFrame, tickers: List[str]) -> pd.DataFrame:
-    return returns[tickers].corr().round(3)
-
-
-def compute_beta(portfolio_returns: pd.Series, market_ticker: str = "SPY", period: str = "1y") -> float:
+def compute_beta(portfolio_returns: pd.Series, period: str = "1y") -> float:
     try:
-        market_data = yf.download(market_ticker, period=period, auto_adjust=True, progress=False)
-        market_returns = market_data["Close"].pct_change().dropna()
+        spy = fetch_single_ticker("SPY", period)
+        if len(spy) < 10:
+            return 1.0
+        market_returns = spy.pct_change().dropna()
         aligned = pd.concat([portfolio_returns, market_returns], axis=1).dropna()
         aligned.columns = ["portfolio", "market"]
         cov = aligned.cov().iloc[0, 1]
@@ -136,9 +187,7 @@ def run_full_analysis(tickers: List[str], weights: List[float], period: str = "1
 
     prices = fetch_price_data(tickers, period)
     available = [t for t in tickers if t in prices.columns]
-    if len(available) < 2:
-        raise ValueError("Need at least 2 valid tickers. Check your symbols (e.g. AAPL, MSFT, NVDA).")
-    # Reweight to only available tickers
+
     raw_weights = {t: weight_dict[t] for t in available}
     total_w = sum(raw_weights.values())
     weight_dict = {t: w / total_w for t, w in raw_weights.items()}
@@ -150,11 +199,11 @@ def run_full_analysis(tickers: List[str], weights: List[float], period: str = "1
     sharpe = compute_sharpe(port_returns)
     sortino = compute_sortino(port_returns)
     max_dd = compute_max_drawdown(port_returns)
-    beta = compute_beta(port_returns)
+    beta = compute_beta(port_returns, period)
     sector_exp = compute_sector_exposure(weight_dict)
     ann_return = compute_annualized_return(port_returns)
     volatility = compute_volatility(port_returns)
-    corr_matrix = compute_correlation_matrix(returns, available)
+    corr_matrix = returns[available].corr().round(2)
 
     cumulative_returns = (1 + port_returns).cumprod()
     cumulative_returns.index = cumulative_returns.index.strftime("%Y-%m-%d")
