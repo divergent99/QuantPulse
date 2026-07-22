@@ -23,6 +23,8 @@ SECTOR_MAP = {
 
 PERIOD_DAYS = {"6mo": 180, "1y": 365, "2y": 730, "5y": 1825}
 
+_price_cache: Dict[str, pd.Series] = {}
+
 
 def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
     """Fetch price data using multiple fallback sources."""
@@ -30,30 +32,37 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
     end = datetime.now()
     start = end - timedelta(days=days)
 
-    # Source 1: Alpha Vantage (works from cloud IPs)
-    av_key = os.getenv("ALPHA_VANTAGE_KEY", "demo")
-    try:
-        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=compact&apikey={av_key}"
-        resp = requests.get(url, timeout=15)
-        data = resp.json()
-        print(f"[AV DEBUG] {ticker} response keys: {list(data.keys())}", flush=True)
-        if "Note" in data:
-            print(f"[AV DEBUG] Rate limit hit: {data['Note']}", flush=True)
-        if "Information" in data:
-            print(f"[AV DEBUG] Info: {data['Information']}", flush=True)
-        if "Time Series (Daily)" in data:
-            ts = data["Time Series (Daily)"]
-            prices = {}
-            for date_str, vals in ts.items():
-                date = pd.to_datetime(date_str)
-                if start <= date <= end:
-                    prices[date] = float(vals["4. close"])
-            if len(prices) > 10:
-                s = pd.Series(prices).sort_index()
-                s.name = ticker
-                return s
-    except Exception:
-        pass
+    # In-memory cache — avoids re-burning API quota on repeated runs within the same process
+    # (e.g. dev-server hot reloads, or clicking "Run Analysis" multiple times back to back).
+    cache_key = f"{ticker}:{period}:{end.date()}"
+    if cache_key in _price_cache:
+        return _price_cache[cache_key]
+
+    # Source 1: Twelve Data (works from cloud IPs, 800 req/day free vs Alpha Vantage's 25/day)
+    td_key = os.getenv("TWELVE_DATA_KEY")
+    if td_key:
+        try:
+            url = f"https://api.twelvedata.com/time_series?symbol={ticker}&interval=1day&outputsize={days}&apikey={td_key}"
+            resp = requests.get(url, timeout=15)
+            data = resp.json()
+            print(f"[TD DEBUG] {ticker} response status: {data.get('status')}", flush=True)
+            if data.get("status") == "error":
+                print(f"[TD DEBUG] Error: {data.get('message')}", flush=True)
+            if data.get("values"):
+                prices = {}
+                for row in data["values"]:
+                    date = pd.to_datetime(row["datetime"])
+                    if start <= date <= end:
+                        prices[date] = float(row["close"])
+                if len(prices) > 10:
+                    s = pd.Series(prices).sort_index()
+                    s.name = ticker
+                    _price_cache[cache_key] = s
+                    return s
+        except Exception:
+            pass
+    else:
+        print("[TD DEBUG] TWELVE_DATA_KEY not set, skipping Twelve Data source", flush=True)
 
     # Source 2: yfinance with curl_cffi impersonation
     try:
@@ -65,6 +74,7 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
         if len(hist) > 10:
             s = hist["Close"]
             s.name = ticker
+            _price_cache[cache_key] = s
             return s
     except Exception:
         pass
@@ -79,6 +89,7 @@ def fetch_single_ticker(ticker: str, period: str = "1y") -> pd.Series:
             else:
                 s = hist["Close"]
             s.name = ticker
+            _price_cache[cache_key] = s
             return s
     except Exception:
         pass
@@ -97,7 +108,8 @@ def fetch_price_data(tickers: List[str], period: str = "1y") -> pd.DataFrame:
         raise ValueError(
             f"Could not fetch data for enough tickers. "
             f"Got data for: {list(series.keys()) or 'none'}. "
-            f"If deploying to cloud, add ALPHA_VANTAGE_KEY env variable."
+            f"If deploying to cloud, add a TWELVE_DATA_KEY env variable "
+            f"(free tier: https://twelvedata.com/pricing)."
         )
 
     df = pd.DataFrame(series)
