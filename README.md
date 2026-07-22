@@ -9,7 +9,7 @@
 [![AlgoFest Hackathon 2026](https://img.shields.io/badge/AlgoFest%20Hackathon%202026-Devpost-003E54?style=flat-square&logo=devpost&logoColor=white)](https://devpost.com)
 [![Amazon Nova Lite](https://img.shields.io/badge/Amazon-Nova%20Lite-FF9900?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock)
 [![Tavily](https://img.shields.io/badge/Tavily-Live%20Search-4A90E2?style=flat-square)](https://tavily.com)
-[![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-Market%20Data-1B6CA8?style=flat-square)](https://alphavantage.co)
+[![Twelve Data](https://img.shields.io/badge/Twelve%20Data-Market%20Data-1B6CA8?style=flat-square)](https://twelvedata.com)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Plotly Dash](https://img.shields.io/badge/Plotly%20Dash-3.0-3D4CB7?style=flat-square&logo=plotly)](https://dash.plotly.com)
@@ -44,7 +44,7 @@ QuantPulse runs a full quantitative risk engine on your portfolio — Value at R
 | Agent | LangGraph (`StateGraph` + sequential nodes) |
 | LLM | Amazon Nova Lite via AWS Bedrock |
 | News | Tavily Search API |
-| Market Data | Alpha Vantage API + yfinance fallback |
+| Market Data | Twelve Data API + yfinance fallback |
 | Quant | NumPy · Pandas · SciPy |
 | Backend | FastAPI + Uvicorn |
 | Frontend | Plotly Dash + Dash Bootstrap Components |
@@ -58,11 +58,11 @@ QuantPulse runs a full quantitative risk engine on your portfolio — Value at R
 
 | Service | Free Tier Limit | Notes |
 |---|---|---|
-| Alpha Vantage | 25 requests/day | Each analysis uses ~6–11 requests (1 per ticker + SPY for beta). Get your key at [alphavantage.co](https://alphavantage.co/support/#api-key) |
+| Twelve Data | 800 requests/day | Each analysis uses ~6–11 requests (1 per ticker + SPY for beta). Get your key at [twelvedata.com](https://twelvedata.com/pricing) |
 | Tavily | 1,000 requests/month | Used for news fetch on each analysis |
 | Amazon Bedrock (Nova Lite) | Pay per token | Very cheap — ~$0.0006 per analysis |
 
-On the free Alpha Vantage tier, you can run approximately **2–3 full analyses per day**. For production use, upgrade to a paid Alpha Vantage plan ($50/month for unlimited calls).
+On the free Twelve Data tier, you can run approximately **70–130 full analyses per day**. For production use, Twelve Data's paid plans start at $10/month for unlimited calls.
 
 ---
 
@@ -90,7 +90,7 @@ cp .env.example .env
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key |
 | `AWS_REGION` | AWS region (default: `us-east-1`) |
 | `TAVILY_API_KEY` | Tavily API key — [get one free](https://tavily.com) |
-| `ALPHA_VANTAGE_KEY` | Alpha Vantage API key — [get one free](https://alphavantage.co/support/#api-key) |
+| `TWELVE_DATA_KEY` | Twelve Data API key — [get one free](https://twelvedata.com/pricing) |
 | `API_URL` | FastAPI base URL (default: `http://localhost:8000`) |
 
 ### 3. Run locally
@@ -176,7 +176,7 @@ quantpulse/
 ```
 FastAPI /analyze
        │
-Alpha Vantage ──► Price Data (yfinance fallback for local)
+Twelve Data ──► Price Data (yfinance fallback for local)
        │
 Quant Engine (VaR · Sharpe · Beta · Drawdown · Correlation)
        │
@@ -207,5 +207,5 @@ Prize pool: $5,000
 ---
 
 <div align="center">
-Made with Amazon Nova Lite · LangGraph · Tavily · Alpha Vantage · Plotly Dash
+Made with Amazon Nova Lite · LangGraph · Tavily · Twelve Data · Plotly Dash
 </div>
