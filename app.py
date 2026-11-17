@@ -178,8 +178,7 @@ button{font-family:var(--sans)}
 /* ------------------------------------------------ MAIN */
 #qp-main{overflow-y:auto;height:100vh;min-width:0}
 .main-inner{padding:20px 26px 100px;max-width:1500px;margin:0 auto}
-.topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px;position:sticky;top:0;z-index:5;
-  padding:14px 0;margin-top:-20px;background:linear-gradient(180deg,rgba(6,8,13,0.92) 60%,rgba(6,8,13,0));backdrop-filter:blur(6px)}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:2px 0 0}
 .crumb{font-size:12px;color:var(--dim);font-weight:500}
 .crumb b{color:var(--muted);font-weight:600}
 .page-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-top:2px}
