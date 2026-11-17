@@ -94,7 +94,7 @@ app.index_string = '''<!DOCTYPE html>
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(900px 520px at 8% -8%,rgba(34,211,238,0.13),transparent 60%),
+    radial-gradient(900px 520px at 35% -10%,rgba(34,211,238,0.10),transparent 60%),
     radial-gradient(800px 600px at 105% 108%,rgba(167,139,250,0.15),transparent 60%),
     radial-gradient(600px 400px at 55% 40%,rgba(52,211,153,0.04),transparent 70%)}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
@@ -105,7 +105,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 ::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.14);border-radius:6px}::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,0.25)}
 #react-entry-point,#_dash-app-content{position:relative;z-index:2}
 #qp-wrap{display:grid;grid-template-columns:292px minmax(0,1fr) 368px;height:100vh;position:relative;z-index:2}
-.glass{background:var(--panel);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.glass{background:#090c13;position:relative;z-index:3}
 button{font-family:var(--sans)}
 
 /* ------------------------------------------------ SIDEBAR */
@@ -115,7 +115,9 @@ button{font-family:var(--sans)}
 .brand-name{font-size:17px;font-weight:800;letter-spacing:-0.3px;line-height:1.1}
 .brand-name b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
 .brand-tag{font-size:11px;color:var(--dim);font-weight:500;margin-top:2px}
-.side-scroll{flex:1;overflow-y:auto;padding:4px 16px 16px;min-height:0}
+.side-scroll{flex:1;overflow-y:auto;padding:4px 16px 16px;min-height:0;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.side-scroll:hover{scrollbar-color:rgba(148,163,184,0.18) transparent}
+.side-scroll::-webkit-scrollbar-thumb{background:transparent}.side-scroll:hover::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.18)}
 .s-sec{margin-top:18px}
 .s-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .s-lbl{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
