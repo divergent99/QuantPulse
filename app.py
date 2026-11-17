@@ -163,6 +163,11 @@ button{font-family:var(--sans)}
 .seg-opt:has(.seg-in:checked){background:var(--panel-2);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,0.05) inset,0 4px 14px rgba(0,0,0,0.35);outline:1px solid var(--line-2)}
 
 .side-foot{padding:14px 16px 16px;border-top:1px solid var(--line)}
+.run-row{display:flex;gap:8px}
+.clear-btn{all:unset;box-sizing:border-box;cursor:pointer;width:48px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;font-weight:700;color:var(--muted);background:var(--inset);border:1px solid var(--line-2);transition:all .18s}
+.clear-btn:hover{color:var(--rose);border-color:rgba(251,113,133,0.45);background:rgba(251,113,133,0.08)}
+.clear-btn span{display:inline-block;transition:transform .35s ease}.clear-btn:hover span{transform:rotate(-180deg)}
 .run-btn{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
   background:var(--grad);color:#06080d;font-weight:700;font-size:14px;padding:12px;border-radius:12px;
   box-shadow:0 8px 28px rgba(56,189,248,0.25),inset 0 1px 0 rgba(255,255,255,0.35);transition:all .2s ease}
@@ -456,11 +461,24 @@ sidebar = html.Div([
         dcc.Store(id="chat-store", data=[]),
     ], className="side-scroll"),
     html.Div([
-        html.Button([html.Span("Run Analysis"), html.Span("↵", className="k")], id="analyze-btn", className="run-btn", n_clicks=0),
+        html.Div([
+            html.Button([html.Span("Run Analysis"), html.Span("↵", className="k")], id="analyze-btn", className="run-btn", n_clicks=0),
+            html.Button(html.Span("↺"), id="clear-btn", className="clear-btn", n_clicks=0, title="Clear analysis"),
+        ], className="run-row"),
         html.Div(id="err-msg", className="err"),
         html.Div([html.Span("Twelve Data"), html.Span("Nova Lite")], className="foot-meta"),
     ], className="side-foot"),
 ], id="qp-side", className="glass")
+
+
+def welcome_msgs():
+    return [html.Div([
+        html.Div(html.Img(src=SPARK, alt=""), className="bot-av"),
+        html.Div([
+            html.Div("Nova", className="b-lbl"),
+            dcc.Markdown("Hey. Run an analysis and I'll have your full risk profile loaded. Then ask me **why** a number looks the way it does, or **what to change**.", className="md"),
+        ], className="b-bot"),
+    ], className="bw-bot")]
 
 
 chat_panel = html.Div([
@@ -472,15 +490,7 @@ chat_panel = html.Div([
         ], className="chat-id"),
         html.Div([html.Span(className="ctx-dot"), html.Span("No portfolio in context yet")], id="chat-context", className="ctx"),
     ], className="chat-top"),
-    html.Div(id="chat-messages", children=[
-        html.Div([
-            html.Div(html.Img(src=SPARK, alt=""), className="bot-av"),
-            html.Div([
-                html.Div("Nova", className="b-lbl"),
-                dcc.Markdown("Hey. Run an analysis and I'll have your full risk profile loaded. Then ask me **why** a number looks the way it does, or **what to change**.", className="md"),
-            ], className="b-bot"),
-        ], className="bw-bot"),
-    ], className="chat-msgs"),
+    html.Div(id="chat-messages", children=welcome_msgs(), className="chat-msgs"),
     html.Div([
         html.Div([
             html.Span("Why is my Sharpe low?", id="hint-1", className="h-chip", n_clicks=0),
@@ -651,6 +661,22 @@ def load_preset(*clicks):
     p = PRESETS[ctx.triggered_id["index"]]
     pad = N_ROWS - len(p["tickers"])
     return p["tickers"] + [""] * pad + p["weights"] + [None] * pad
+
+
+@app.callback(
+    [Output({"type": "ticker", "index": i}, "value", allow_duplicate=True) for i in range(N_ROWS)] +
+    [Output({"type": "weight", "index": i}, "value", allow_duplicate=True) for i in range(N_ROWS)] +
+    [Output("results", "children", allow_duplicate=True), Output("portfolio-store", "data", allow_duplicate=True),
+     Output("err-msg", "children", allow_duplicate=True), Output("topbar-sub", "children", allow_duplicate=True),
+     Output("period-store", "value"), Output("chat-messages", "children", allow_duplicate=True),
+     Output("chat-store", "data", allow_duplicate=True)],
+    Input("clear-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def clear_all(n):
+    if not n:
+        return [no_update] * (N_ROWS * 2 + 7)
+    return [""] * N_ROWS + [None] * N_ROWS + [[empty_state], {}, "", "Awaiting portfolio", "1y", welcome_msgs(), []]
 
 
 @app.callback(
