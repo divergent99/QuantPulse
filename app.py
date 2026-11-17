@@ -104,7 +104,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.14);border-radius:6px}::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,0.25)}
 #react-entry-point,#_dash-app-content{position:relative;z-index:2}
-#qp-wrap{display:grid;grid-template-columns:292px minmax(0,1fr) 368px;height:100vh;position:relative;z-index:2}
+#qp-wrap{display:grid;grid-template-columns:292px minmax(0,1fr);height:100vh;position:relative;z-index:2}
 .glass{background:#090c13;position:relative;z-index:3}
 button{font-family:var(--sans)}
 
@@ -177,7 +177,7 @@ button{font-family:var(--sans)}
 
 /* ------------------------------------------------ MAIN */
 #qp-main{overflow-y:auto;height:100vh;min-width:0}
-.main-inner{padding:20px 26px 40px;max-width:1500px;margin:0 auto}
+.main-inner{padding:20px 26px 100px;max-width:1500px;margin:0 auto}
 .topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px;position:sticky;top:0;z-index:5;
   padding:14px 0;margin-top:-20px;background:linear-gradient(180deg,rgba(6,8,13,0.92) 60%,rgba(6,8,13,0));backdrop-filter:blur(6px)}
 .crumb{font-size:12px;color:var(--dim);font-weight:500}
@@ -252,8 +252,9 @@ button{font-family:var(--sans)}
 .wbar div span{display:block;height:100%;border-radius:4px;background:var(--grad)}
 
 /* news */
-.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.news-item{display:block;text-decoration:none;padding:14px 15px;border-radius:12px;background:var(--inset);border:1px solid var(--line);transition:all .18s}
+.news-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.qp,.grid>*{min-width:0}
+.news-item{display:block;min-width:0;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;text-decoration:none;padding:14px 15px;border-radius:12px;background:var(--inset);border:1px solid var(--line);transition:all .18s}
 .news-item:hover{border-color:var(--line-2);transform:translateY(-2px);background:rgba(13,17,27,0.9)}
 .news-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .news-tag{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.8px;padding:3px 7px;border-radius:6px}
@@ -295,7 +296,24 @@ button{font-family:var(--sans)}
 .cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--inset)}
 
 /* ------------------------------------------------ CHAT */
-#qp-chat{border-left:1px solid var(--line);display:flex;flex-direction:column;height:100vh;min-height:0}
+#qp-chat{position:fixed;right:24px;bottom:96px;width:410px;height:min(660px,calc(100vh - 124px));z-index:60;display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  background:#0a0d15;border:1px solid var(--line-2);border-radius:20px;box-shadow:0 40px 90px -20px rgba(0,0,0,0.85),0 0 0 1px rgba(129,140,248,0.08);
+  transform-origin:bottom right;transform:translateY(14px) scale(.94);opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .22s ease,transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s linear .26s}
+#qp-chat.open{opacity:1;transform:none;visibility:visible;pointer-events:auto;transition:opacity .22s ease,transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.chat-close{all:unset;cursor:pointer;margin-left:auto;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:18px;border:1px solid var(--line);transition:all .15s}
+.chat-close:hover{color:var(--text);border-color:var(--line-2);background:var(--inset)}
+.chat-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:24px;z-index:61;cursor:pointer;height:54px;padding:0 20px 0 8px;border-radius:999px;
+  display:flex;align-items:center;gap:10px;background:var(--grad);color:#06080d;font-weight:700;font-size:14px;
+  box-shadow:0 14px 40px rgba(129,140,248,0.45),inset 0 1px 0 rgba(255,255,255,0.35);transition:all .22s cubic-bezier(.2,.8,.2,1)}
+.chat-fab:hover{transform:translateY(-2px);box-shadow:0 18px 48px rgba(129,140,248,0.55),inset 0 1px 0 rgba(255,255,255,0.35)}
+.fab-ic{width:38px;height:38px;border-radius:50%;background:rgba(6,8,13,0.16);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800}
+.fab-ic img{width:20px;height:20px}
+.fab-x{display:none}
+.chat-fab.open{padding:0 8px;width:54px;justify-content:center}
+.chat-fab.open .fab-txt,.chat-fab.open .fab-ic img{display:none}
+.chat-fab.open .fab-x{display:block}
+.chat-fab.ready:not(.open)::after{content:"";position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--mint);border:2px solid #06080d;animation:pulse 2s infinite}
 .chat-top{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
 .chat-id{display:flex;align-items:center;gap:12px}
 .chat-av{position:relative;width:38px;height:38px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px rgba(129,140,248,0.35)}
@@ -342,13 +360,14 @@ button{font-family:var(--sans)}
 @keyframes fi{to{opacity:1;transform:none}}
 
 /* responsive */
-@media (max-width:1440px){#qp-wrap{grid-template-columns:270px minmax(0,1fr) 330px}.m-val{font-size:24px}}
+@media (max-width:1440px){#qp-wrap{grid-template-columns:270px minmax(0,1fr)}.m-val{font-size:24px}}
 @media (max-width:1200px){.m-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.g-3{grid-template-columns:1fr 1fr}.ai-grid{grid-template-columns:1fr}.risk-row{grid-template-columns:1fr}}
 @media (max-width:980px){
   html,body{overflow:auto}
   #qp-wrap{grid-template-columns:1fr;height:auto}
-  #qp-side,#qp-chat,#qp-main{height:auto;border:none}
-  #qp-chat{height:80vh}
+  #qp-side,#qp-main{height:auto;border:none}
+  #qp-chat{inset:0;width:auto;height:auto;border-radius:0;bottom:0;right:0}
+  .chat-fab{right:16px;bottom:16px}
   .g-2,.g-21,.g-3,.rec-grid,.news-grid,.steps{grid-template-columns:1fr}
 }
 </style>
@@ -450,6 +469,7 @@ chat_panel = html.Div([
         html.Div([
             html.Div(html.Img(src=SPARK, alt=""), className="chat-av"),
             html.Div([html.Div("Portfolio Chat", className="chat-title"), html.Div("Amazon Nova Lite · context-aware", className="chat-sub")]),
+            html.Button("×", id="chat-close", className="chat-close", n_clicks=0, title="Close"),
         ], className="chat-id"),
         html.Div([html.Span(className="ctx-dot"), html.Span("No portfolio in context yet")], id="chat-context", className="ctx"),
     ], className="chat-top"),
@@ -475,7 +495,12 @@ chat_panel = html.Div([
         ], className="chat-inp-row"),
         html.Div("AI answers can be wrong. Not financial advice.", className="chat-note"),
     ], className="chat-foot"),
-], id="qp-chat", className="glass")
+], id="qp-chat")
+
+chat_fab = html.Button([
+    html.Span([html.Img(src=SPARK, alt=""), html.Span("×", className="fab-x")], className="fab-ic"),
+    html.Span("Ask Nova", className="fab-txt"),
+], id="chat-fab", className="chat-fab", n_clicks=0, title="Portfolio chat")
 
 
 empty_state = html.Div([
@@ -491,7 +516,7 @@ empty_state = html.Div([
 ], className="empty")
 
 
-app.layout = html.Div([
+app.layout = html.Div([html.Div([
     sidebar,
     html.Div(html.Div([
         html.Div([
@@ -520,8 +545,10 @@ app.layout = html.Div([
         ]),
         html.Div(id="results", children=[empty_state]),
     ], className="main-inner"), id="qp-main"),
+], id="qp-wrap"),
     chat_panel,
-], id="qp-wrap")
+    chat_fab,
+])
 
 
 # ---------------------------------------------------------------- client-side
@@ -572,6 +599,24 @@ app.clientside_callback(
     Output("results", "style", allow_duplicate=True),
     Input("err-msg", "children"),
     prevent_initial_call=True,
+)
+
+# Floating chat: open/close from the bubble or the header ×, show a dot once a portfolio is loaded
+app.clientside_callback(
+    """
+    function(fab, close, data) {
+        var trig = (window.dash_clientside.callback_context.triggered[0] || {}).prop_id || '';
+        var panel = document.getElementById('qp-chat');
+        var isOpen = panel && panel.classList.contains('open');
+        if (trig.indexOf('chat-fab') === 0) isOpen = !isOpen;
+        else if (trig.indexOf('chat-close') === 0) isOpen = false;
+        var ready = data && Object.keys(data).length ? ' ready' : '';
+        if (isOpen) setTimeout(function(){var i=document.getElementById('chat-input'); if(i) i.focus();}, 120);
+        return [isOpen ? 'open' : '', 'chat-fab' + ready + (isOpen ? ' open' : '')];
+    }
+    """,
+    Output("qp-chat", "className"), Output("chat-fab", "className"),
+    Input("chat-fab", "n_clicks"), Input("chat-close", "n_clicks"), Input("portfolio-store", "data"),
 )
 
 # Clock runs in the browser so it doesn't hit the server every second
@@ -966,6 +1011,13 @@ def analyze(_, *args):
 
     port_news, macro_news = data.get("news", []), data.get("macro_news", [])
     news_items = []
+    def junk(a):
+        # Tavily sometimes returns Yahoo quote-comparison pages: ticker lists, not articles
+        t = a.get("title", "")
+        return t.count(",") >= 4 or "Quote Comparison" in t or not t.strip()
+
+    port_news = [a for a in port_news if not junk(a)]
+    macro_news = [a for a in macro_news if not junk(a)]
     for i, a in enumerate((port_news + macro_news)[:8]):
         is_port = i < len(port_news)
         tc, bg = (C["cyan"], "rgba(34,211,238,0.10)") if is_port else (C["violet"], "rgba(167,139,250,0.12)")
