@@ -109,11 +109,11 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 button{font-family:var(--sans)}
 
 /* ------------------------------------------------ SIDEBAR */
-#qp-side{border-right:1px solid var(--line);display:flex;flex-direction:column;height:100vh;min-height:0}
+#qp-side{transform:translateZ(0);contain:layout paint;border-right:1px solid var(--line);display:flex;flex-direction:column;height:100vh;min-height:0}
 .brand{display:flex;align-items:center;gap:12px;padding:20px 20px 18px}
-.brand img{width:36px;height:36px;border-radius:10px;box-shadow:0 6px 24px rgba(34,211,238,0.28)}
+.brand img{width:36px;height:36px;border-radius:10px;display:block;flex-shrink:0}
 .brand-name{font-size:17px;font-weight:800;letter-spacing:-0.3px;line-height:1.1}
-.brand-name b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.brand-name b{color:#7dd3fc;font-weight:800}
 .brand-tag{font-size:11px;color:var(--dim);font-weight:500;margin-top:2px}
 .side-scroll{flex:1;overflow-y:auto;padding:4px 16px 16px;min-height:0;scrollbar-width:thin;scrollbar-color:transparent transparent}
 .side-scroll:hover{scrollbar-color:rgba(148,163,184,0.18) transparent}
