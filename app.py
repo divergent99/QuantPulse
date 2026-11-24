@@ -16,6 +16,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     external_scripts=["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"],
     title="QuantPulse",
+    update_title=None,  # Dash sets the tab to "Updating..." on every callback; the 1s clock made it flicker
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     suppress_callback_exceptions=True,
 )
